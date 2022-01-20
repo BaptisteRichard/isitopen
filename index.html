@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Is it open ?</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="./favicon.ico">
+    <script src="./js/opening_hours+deps.min.js"></script>
+
+<style>
+
+#content{
+	display:flex; 
+	flex-flow:wrap;
+	justify-content: space-evenly;
+}
+
+.item{
+	background-color: #CCC;
+	border-radius: 2rem;
+	border: 1px solid #AAA;
+	cursor: pointer;
+	color: #ffffff;
+	align-items: center;
+	justify-content: space-around;
+	padding: 1rem;
+	width: 20rem; 
+	height: 20rem; 
+	margin-top:2rem;
+}
+
+.name { 
+	font : 3.2rem bold;
+}
+
+.nextChange {
+	font-size : 2.5rem;
+}
+
+.address {
+	font-size : 1.2rem;
+}
+
+.openingHours {
+	font-size : 3rem;
+	display:none;
+}
+
+.open {
+	background-color: #7A7;
+	border: 1px solid #3A3;
+}
+.closed {
+	background-color: #A77;
+	border: 1px solid #A33;
+}
+
+</style>
+
+<script>
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+
+var nodeIds=[];
+
+//If we have some IDs in localstorage , use them instead
+if(localStorage.getItem('nodeIds') != null){
+//alert(1);
+  nodeIds=localStorage.getItem('nodeIds');
+}
+
+//If some Ids were passed in URL, use them instead of anything else
+if(urlParams.has('nodeIds')){
+  nodeIds=urlParams.get('nodeIds');
+}
+
+// Force ids to be stored in an array
+if(!Array.isArray(nodeIds)){ nodeIds = nodeIds.split(',') ;}
+
+//convert Ids to numeric
+nodeIds = nodeIds.map(elem=>Number.parseInt(elem,10));
+
+//exclude anything that was not correctly parsed to numeric
+nodeIds = nodeIds.filter(function(v){ return Number.isInteger(v); });
+
+// Set local Storage to last values
+localStorage.setItem('nodeIds',nodeIds.join(','));
+
+
+function submitForm(){
+  nodeIds.push(document.getElementById("add").value);
+  var location='./index.html?nodeIds='+nodeIds.join(',');
+
+  window.location=location;
+}
+
+</script>
+
+  </head>
+
+  <body>
+
+<form onSubmit="submitForm(); return false;"/>
+<center> Add a store to check : <input type="text" id="add" /><input type=submit value="Add"/></center>
+</form>
+
+<div id="content" ></div>
+
+    <script>
+const weekday = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+//const OVERPASS_API = 'https://overpass-api.de/api/interpreter?data=[out:json];'
+const NOMINATIM_API = 'https://nominatim.openstreetmap.org/lookup?format=json&extratags=1&namedetails=1&';
+
+
+function isTomorrow(date){
+	var now = new Date();
+	var diff = date.getTime() - now.getTime();
+	return ( diff > 0 && diff < 172799 && now.getDate() != date.getDate());
+}
+
+function addZero(i) {
+	if (i < 10) {i = "0" + i}
+	return i;
+}
+
+function showHideOH(id){
+
+  elem = document.getElementById(id);
+
+  if(elem.getElementsByClassName('openingHours')[0].style.display == "block"){
+		elem.getElementsByClassName('openingHours')[0].style.display = "none";
+		elem.getElementsByClassName('nextChange')[0].style.display = "block";
+		elem.getElementsByClassName('address')[0].style.display = "block";
+		elem.getElementsByClassName('name')[0].style.display = "block";
+	}else{
+		elem.getElementsByClassName('openingHours')[0].style.display = "block";
+		elem.getElementsByClassName('nextChange')[0].style.display = "none";
+		elem.getElementsByClassName('address')[0].style.display = "none";
+		elem.getElementsByClassName('name')[0].style.display = "none";
+	}
+
+
+}
+
+async function fetchObjects(nodeIds){
+
+	//prefix node IDs with an N for nominatim search
+	nodeIds = nodeIds.map(elem=> 'N'+elem);
+	const nominatimUrl = NOMINATIM_API + 'osm_ids='+nodeIds.join()+'';
+	const response = await fetch(nominatimUrl);
+	const osmDataAsJson = await response.json(); // read response body and parse as JSON
+
+	if (osmDataAsJson.length != 0) {
+		osmDataAsJson.forEach((node, i) => {
+			fillInfo(node);
+		});
+	}
+}
+
+//var nodeIds=[2813031211,1776091479];
+fetchObjects(nodeIds);
+
+function fillInfo(node){
+
+	//First fill in the name and address
+	document.getElementById(node.osm_id).getElementsByClassName('name')[0].innerHTML = node.namedetails.name;
+
+	//Fetch the possible tags for city and remove undefined ones
+	var location = [node.address.city,node.address.village,node.address.town,node.address.municipality];
+	var city = location.filter(x => x !== undefined);
+	if(node.address.road || city[0]){
+		document.getElementById(node.osm_id).getElementsByClassName('address')[0].innerHTML = node.address.road+", "+city[0];
+	}
+  
+	if(!node.extratags.opening_hours) {
+		//If we don't have any data on OSM
+
+		document.getElementById(node.osm_id).getElementsByClassName('nextChange')[0].innerHTML = "No data on OSM";
+		document.getElementById(node.osm_id).getElementsByClassName('openingHours')[0].innerHTML = "";
+		return ;
+	}
+
+	// Language for the warnings (get it from the browser settings).
+	let locale = navigator.language;
+
+	// Create opening_hours object.
+	let oh = new opening_hours(node.extratags.opening_hours, node, { 'locale': locale });
+
+	// Prettify the value in different languages.
+	let prettifiedValue = oh.prettifyValue({conf: { locale: locale, rule_sep_string: '<br/>' },});
+
+	var state = oh.getState();
+	var nextChange = oh.getNextChange();
+	var ncHours = nextChange.getHours();
+	var ncMinutes = nextChange.getMinutes();
+	var ncDate = nextChange.getDate();
+	var ncDay= nextChange.getDay();
+	var now = new Date();
+	var result = "";
+
+	if(state) {
+		document.getElementById(node.osm_id).classList.add("open");
+		result += "Ouvert jusqu'";
+	}else{
+		document.getElementById(node.osm_id).classList.add("closed");
+		result += "Ouvre ";
+	}
+
+
+//	result += "jusqu'"
+	if (now.getDate() == ncDate) {
+		// Only display hour of the nextChange if it is today
+		result += "à "+addZero(ncHours)+"h"+addZero(ncMinutes);
+	}else{
+		result += "à ";
+		if(isTomorrow(nextChange)){
+			result += "demain"; 
+		}else{
+			result += weekday[ncDay];
+		}
+		result += " "+addZero(ncHours)+"h"+addZero(ncMinutes);
+	}
+
+	document.getElementById(node.osm_id).getElementsByClassName('nextChange')[0].innerHTML =  result;
+	document.getElementById(node.osm_id).getElementsByClassName('openingHours')[0].innerHTML =  prettifiedValue;
+}
+
+
+//Create the canvas of nodes
+nodeIds.forEach(id => {
+
+	var div = document.createElement('div');
+	div.id = id;
+	div.onclick = function (){ showHideOH(id)};
+	div.classList.add("item");
+
+	var name = document.createElement('div');
+	name.classList.add("name");
+	name.innerHTML = "Name (awaiting)";
+
+	var address = document.createElement('div');
+	address.classList.add("address");
+	address.innerHTML = " ";
+
+	var nextChange = document.createElement('div');
+	nextChange.classList.add("nextChange");
+	nextChange.innerHTML = "nc (awaiting)";
+
+	var openingHours = document.createElement('div');
+	openingHours.classList.add("openingHours");
+	openingHours.innerHTML = "oh (awaiting)";
+
+
+	div.appendChild(name);
+	//div.appendChild(document.createElement('br'));
+	div.appendChild(address);
+	//div.appendChild(document.createElement('br'));
+	div.appendChild(nextChange);
+	//div.appendChild(document.createElement('br'));
+	div.appendChild(openingHours);
+
+	document.getElementById('content').appendChild(div);
+});
+
+
+</script>
+
+
+
+ </body>
+</html>
