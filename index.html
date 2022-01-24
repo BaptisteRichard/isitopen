@@ -112,10 +112,13 @@ const weekday = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samed
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/lookup?format=json&extratags=1&namedetails=1&';
 
 
+var nodeList= [];
+
 function isTomorrow(date){
 	var now = new Date();
 	var diff = date.getTime() - now.getTime();
-	return ( diff > 0 && diff < 172799 && now.getDate() != date.getDate());
+	// date is after now, and less than 2 days forward and not the same day as today
+	return ( diff > 0 && diff < 172799999 && now.getDate() != date.getDate());
 }
 
 function addZero(i) {
@@ -154,11 +157,18 @@ async function fetchObjects(nodeIds){
 		osmDataAsJson.forEach((node, i) => {
 			fillInfo(node);
 		});
+		nodeList=osmDataAsJson;
 	}
+	
 }
 
 //var nodeIds=[2813031211,1776091479];
 fetchObjects(nodeIds);
+
+// Refresh state every minute
+var intervalId = window.setInterval(function(){
+  nodeList.forEach((node,i) => { fillInfo(node) ; } )
+}, 60000);
 
 function fillInfo(node){
 
@@ -199,9 +209,11 @@ function fillInfo(node){
 	var result = "";
 
 	if(state) {
+		document.getElementById(node.osm_id).classList.remove("closed");
 		document.getElementById(node.osm_id).classList.add("open");
 		result += "Ouvert jusqu'";
 	}else{
+		document.getElementById(node.osm_id).classList.remove("open");
 		document.getElementById(node.osm_id).classList.add("closed");
 		result += "Ouvre ";
 	}
@@ -212,13 +224,12 @@ function fillInfo(node){
 		// Only display hour of the nextChange if it is today
 		result += "à "+addZero(ncHours)+"h"+addZero(ncMinutes);
 	}else{
-		result += "à ";
 		if(isTomorrow(nextChange)){
 			result += "demain"; 
 		}else{
 			result += weekday[ncDay];
 		}
-		result += " "+addZero(ncHours)+"h"+addZero(ncMinutes);
+		result += " à "+addZero(ncHours)+"h"+addZero(ncMinutes);
 	}
 
 	document.getElementById(node.osm_id).getElementsByClassName('nextChange')[0].innerHTML =  result;
