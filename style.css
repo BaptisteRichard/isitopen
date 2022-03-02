@@ -1,0 +1,115 @@
+/* For all devices: */
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100vw;
+}
+
+#map {
+  height: 100%;
+  width: 100vw;
+  z-index: 1;
+}
+
+#menu {
+//  display: none;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100vw;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background-color: rgba(200, 200, 200, 0.7);
+}
+
+.fadein {
+  opacity: 1;
+}
+.fadein.is-active {
+  transition: all ease 2s;
+  opacity: 0 ;
+}
+
+#noGPS {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;  
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    display: none;
+    position : fixed;
+    top : 45%;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index : 15;
+}
+
+#selectTarget {
+//  display: flex;
+  flex-flow: wrap;
+  justify-content: space-around;
+  width: 100vw;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background-color: rgba(200, 200, 200, 0.7);
+}
+
+.myButton {
+  box-shadow: 1px 2px 0px 0px #1564ad;
+//  background: linear-gradient(to bottom, #004eca 5%, #378de5 100%);
+  background-color: #a0cefa;
+  border-radius: 6vh;
+  border: 1px solid #337bc4;
+  cursor: pointer;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 20px 20px;
+  width: 20vw;
+  height: 20vw;
+  margin-top: 3vh;
+}
+
+.back_button {
+  height: 100%;
+  width: 100%;
+}
+
+button {
+  padding: 5px;
+}
+
+#valid_button {
+  background-color: #a0cefa;
+  height: 40px;
+  width: 40px;  
+}
+
+.no-gps {
+  line-height: 2.5;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-top: 5%;
+  margin-left: 20%;
+  margin-right: 20%;
+  min-width: 60%;
+}
+
+.refresh_button {
+  margin-top: 15vh;
+}

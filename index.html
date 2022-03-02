@@ -45,6 +45,13 @@
 	display:none;
 }
 
+.menu {
+	display:none;
+	font-size : 3.2rem;
+	text-align:center;
+	padding: 4.5rem;
+}
+
 .open {
 	background-color: #7A7;
 	border: 1px solid #3A3;
@@ -98,6 +105,8 @@ if(urlParams.has('delNode')){
 // Set local Storage to last values
 localStorage.setItem('nodeIds',nodeIds.join(','));
 
+//clean URL of parameters
+history.replaceState('','7ouvert',window.location.href.split('?')[0]);
 
 function submitForm(){
   nodeIds.push(document.getElementById("add").value);
@@ -113,7 +122,7 @@ function submitForm(){
   <body>
 
 <form onSubmit="submitForm(); return false;"/>
-<center> Add a store to check : <input type="text" id="add" /><input type=submit value="Add"/></center>
+<center> <a href="addNode.html"> Add a node to check</a></center>
 </form>
 
 <div id="content" ></div>
@@ -137,6 +146,29 @@ const NOMINATIM_API = 'https://nominatim.openstreetmap.org/lookup?format=json&ex
 
 var nodeList= [];
 
+menuShow=0;
+
+function showContextualMenu(id){
+
+	menuShow=1;
+  elem = document.getElementById(id);
+
+  if(elem.getElementsByClassName('menu')[0].style.display == "block"){
+		elem.getElementsByClassName('menu')[0].style.display = "none";
+		elem.getElementsByClassName('openingHours')[0].style.display = "none";
+		elem.getElementsByClassName('nextChange')[0].style.display = "block";
+		elem.getElementsByClassName('address')[0].style.display = "block";
+		elem.getElementsByClassName('name')[0].style.display = "block";
+	}else{
+		elem.getElementsByClassName('menu')[0].style.display = "block";
+		elem.getElementsByClassName('openingHours')[0].style.display = "none";
+		elem.getElementsByClassName('nextChange')[0].style.display = "none";
+		elem.getElementsByClassName('address')[0].style.display = "none";
+		elem.getElementsByClassName('name')[0].style.display = "none";
+	}
+
+}
+
 function isTomorrow(date){
 	var now = new Date();
 	var diff = date.getTime() - now.getTime();
@@ -154,11 +186,13 @@ function showHideOH(id){
   elem = document.getElementById(id);
 
   if(elem.getElementsByClassName('openingHours')[0].style.display == "block"){
+		elem.getElementsByClassName('menu')[0].style.display = "none";
 		elem.getElementsByClassName('openingHours')[0].style.display = "none";
 		elem.getElementsByClassName('nextChange')[0].style.display = "block";
 		elem.getElementsByClassName('address')[0].style.display = "block";
 		elem.getElementsByClassName('name')[0].style.display = "block";
 	}else{
+		elem.getElementsByClassName('menu')[0].style.display = "none";
 		elem.getElementsByClassName('openingHours')[0].style.display = "block";
 		elem.getElementsByClassName('nextChange')[0].style.display = "none";
 		elem.getElementsByClassName('address')[0].style.display = "none";
@@ -207,7 +241,7 @@ function ohReadable(oh){
 	monday.setUTCHours(0,0,0,0);
 	//Next Sunday
 	var sunday = new Date();
-	sunday.setDate(sunday.getDate() + (sunday.getDay() + 6) % 7);
+	sunday.setDate(sunday.getDate() + (7-sunday.getDay()) % 7);
 	sunday.setUTCHours(23,59,59,999);
 
 	//Get openings for the present week
@@ -314,9 +348,17 @@ function fillInfo(node){
 //Create the canvas of nodes
 nodeIds.forEach(id => {
 
+	var pressTimer;
 	var div = document.createElement('div');
 	div.id = id;
 	div.onclick = function (){ showHideOH(id)};
+//	div.onmouseup = function () { clearTimeout(pressTimer); return false; }
+//	div.onmousedown = function () { pressTimer=setTimeout(function(){showContextualMenu(id)},500); return false; }
+	div.oncontextmenu = function () { showContextualMenu(id); return false; }
+
+	div.ontouchend = function () { if(!menuShow){showHideOH(id)} clearTimeout(pressTimer); menuShow=0; return false; }
+	div.ontouchstart = function () { pressTimer=setTimeout(function(){showContextualMenu(id)},500); return false; }
+
 	div.classList.add("item");
 
 	var name = document.createElement('div');
@@ -335,6 +377,24 @@ nodeIds.forEach(id => {
 	openingHours.classList.add("openingHours");
 	openingHours.innerHTML = "oh (awaiting)";
 
+	var menu = document.createElement('div');
+	menu.classList.add("menu");
+
+	var shareBtn = document.createElement('div');
+  shareBtn.onclick= function () { navigator.clipboard.writeText(window.location.href+"?addNode="+id).then(() => alert("copied")) ; return false;};
+	shareBtn.innerHTML="Share";
+
+	var delBtn = document.createElement('div');
+	delBtn.innerHTML="<a href='index.html?delNode="+id+"' >Delete</a>";
+
+	var cancelBtn = document.createElement('div');
+	cancelBtn.innerHTML="Cancel";
+
+	menu.appendChild(shareBtn);
+	menu.appendChild(delBtn);
+	menu.appendChild(cancelBtn);
+	//menu.innerHTML = "<a href='index.html?delNode="+id+"' >Delete</a><br/>Cancel";
+
 
 	div.appendChild(name);
 	//div.appendChild(document.createElement('br'));
@@ -343,6 +403,7 @@ nodeIds.forEach(id => {
 	div.appendChild(nextChange);
 	//div.appendChild(document.createElement('br'));
 	div.appendChild(openingHours);
+	div.appendChild(menu);
 
 	document.getElementById('content').appendChild(div);
 });
