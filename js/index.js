@@ -1,20 +1,6 @@
 var nodeIds=[];
 
-/*
-const weekday_en = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-const weekday_fr = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
-const weekday_short_en = ["Sun.","Mon.","Tue.","Wed.","Thu.","Fri.","Sat."]
-const weekday_short_fr = ["Dim.","Lun.","Mar.","Mer.","Jeu.","Ven.","Sam."];
-
-
-const weekday = (navigator.language == 'fr-FR' )? weekday_fr : weekday_en ;
-const weekday_short = (navigator.language == 'fr-FR' )? weekday_short_fr : weekday_short_en ;
-const str_open = (navigator.language == 'fr-FR' )? "Ouvert" : "Open" ;
-const str_closed = (navigator.language == 'fr-FR' )? "Fermé" : "Closed" ;
-*/
-
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/lookup?format=json&extratags=1&namedetails=1&';
-
 
 var nodeList= [];
 
@@ -65,6 +51,10 @@ function loadParams(){
 	history.replaceState('','7ouvert',window.location.href.split('?')[0]);
 }
 
+function exportList(){
+ 	navigator.clipboard.writeText(window.location.href+"?nodeIds="+nodeIds.join()).then(() => alert(i18n("str_copied"))) ;
+  return false;
+}
 
 function showContextualMenu(id){
 
