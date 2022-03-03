@@ -19,29 +19,30 @@ function loadParams(){
 
 	//If some Ids were passed in URL, use them instead of anything else
 	if(urlParams.has('nodeIds')){
-	nodeIds=urlParams.get('nodeIds');
+		nodeIds=urlParams.get('nodeIds');
 	}
 
 	// Force ids to be stored in an array
 	if(!Array.isArray(nodeIds)){ nodeIds = nodeIds.split(',') ;}
 
-	//convert Ids to numeric
-	nodeIds = nodeIds.map(elem=>Number.parseInt(elem,10));
 
-	//exclude anything that was not correctly parsed to numeric
-	nodeIds = nodeIds.filter(function(v){ return Number.isInteger(v); });
+	sanityCheck=/^[NW][0-9]+/i;
+	//Sanity check : all elements must be [NW][0-9]+
+	nodeIds = nodeIds.filter(function(v){ 
+		return v.match(sanityCheck); }
+	);
 
 	//If addNode is present, add it to the current list
-	if(urlParams.has('addNode')){
-		var nodeId = Number.parseInt(urlParams.get('addNode'));
+	if(urlParams.has('addNode') && urlParams.get('addNode').match(sanityCheck)){
+		var nodeId = urlParams.get('addNode');
 		if (nodeIds.indexOf(nodeId) === -1){
 			nodeIds.push(nodeId);
 		}
 	}
 
 	//If delNode is present, remove it from the current list
-	if(urlParams.has('delNode')){
-		nodeIds = nodeIds.filter(function(v){ return Number.parseInt(urlParams.get('delNode')) != v; });
+	if(urlParams.has('delNode') && urlParams.get('delNode').match(sanityCheck)){
+		nodeIds = nodeIds.filter(function(v){ return urlParams.get('delNode') != v ; });
 	}
 
 	// Set local Storage to last values
@@ -111,8 +112,9 @@ function showHideOH(id){
 async function fetchObjects(nodeIds){
 
 	//prefix node IDs with an N for nominatim search
-	nodeIds = nodeIds.map(elem=> 'N'+elem);
+//	nodeIds = nodeIds.map(elem=> 'N'+elem);
 	const nominatimUrl = NOMINATIM_API + 'osm_ids='+nodeIds.join()+'';
+	console.log(nominatimUrl);
 	const response = await fetch(nominatimUrl);
 	const osmDataAsJson = await response.json(); // read response body and parse as JSON
 
@@ -137,6 +139,26 @@ function init(){
 	createCanvas(nodeIds);
 
 }
+
+function addLinks(){
+
+	var addLink = document.createElement('a');
+	addLink.href="addNode.html";
+	addLink.innerHTML=i18n('str_add_node');
+
+	var shareLink = document.createElement('a');
+	shareLink.onclick=function () { exportList(); return false;};
+	shareLink.href="";
+	shareLink.innerHTML=i18n('str_share_list');
+
+	var separator = document.createElement('span');
+	separator.innerHTML=" | ";
+
+	document.getElementById('links').appendChild(addLink);
+	document.getElementById('links').appendChild(separator);
+	document.getElementById('links').appendChild(shareLink);
+}
+
 
 function createCanvas(nodeIds){
 	//Create the canvas of nodes
@@ -258,20 +280,29 @@ function ohReadable(oh){
 function fillInfo(node){
 
 	//First fill in the name and address
-	document.getElementById(node.osm_id).getElementsByClassName('name')[0].innerHTML = node.namedetails.name;
+	var id=node.osm_id;
+	if(node.osm_type == "node" ){ id = "N"+id;}
+	if(node.osm_type == "way" ){ id = "W"+id;}
+
+  var name=node.namedetails.name;
+  //for specific amenities, add the type name
+  if(node.type && node.type == 'post_office' ) { name = i18n('str_post_office')+" "+name ;}
+
+
+	document.getElementById(id).getElementsByClassName('name')[0].innerHTML = name;
 
 	//Fetch the possible tags for city and remove undefined ones
 	var location = [node.address.city,node.address.village,node.address.town,node.address.municipality];
 	var city = location.filter(x => x !== undefined);
 	if(node.address.road || city[0]){
-		document.getElementById(node.osm_id).getElementsByClassName('address')[0].innerHTML = node.address.road+", "+city[0];
+		document.getElementById(id).getElementsByClassName('address')[0].innerHTML = node.address.road+", "+city[0];
 	}
   
 	if(!node.extratags.opening_hours) {
 		//If we don't have any data on OSM
 
-		document.getElementById(node.osm_id).getElementsByClassName('nextChange')[0].innerHTML = "No data on OSM";
-		document.getElementById(node.osm_id).getElementsByClassName('openingHours')[0].innerHTML = "";
+		document.getElementById(id).getElementsByClassName('nextChange')[0].innerHTML = i18n('str_osm_no_data');
+		document.getElementById(id).getElementsByClassName('openingHours')[0].innerHTML = "";
 		return ;
 	}
 
@@ -285,6 +316,11 @@ function fillInfo(node){
 	//let prettifiedValue = oh.prettifyValue({conf: { locale: locale, rule_sep_string: '<br/>' },});
 	let prettifiedValue = ohReadable(oh).join("<br/>");
 
+	//Add website information if available
+	if(node.extratags.website) { 
+		prettifiedValue += '<br><a href="'+node.extratags.website+'" target="_blank">'+i18n('str_visit_website')+'</a>'; 
+	}
+
 	var state = oh.getState();
 	var nextChange = oh.getNextChange();
 	var ncHours = nextChange.getHours();
@@ -295,12 +331,12 @@ function fillInfo(node){
 	var result = "";
 
 	if(state) {
-		document.getElementById(node.osm_id).classList.remove("closed");
-		document.getElementById(node.osm_id).classList.add("open");
+		document.getElementById(id).classList.remove("closed");
+		document.getElementById(id).classList.add("open");
 		result += i18n('str_open_until')+" ";
 	}else{
-		document.getElementById(node.osm_id).classList.remove("open");
-		document.getElementById(node.osm_id).classList.add("closed");
+		document.getElementById(id).classList.remove("open");
+		document.getElementById(id).classList.add("closed");
 		result += i18n('str_opens')+" ";
 	}
 
@@ -318,8 +354,8 @@ function fillInfo(node){
 		result += " "+i18n('str_at')+" "+addZero(ncHours)+"h"+addZero(ncMinutes);
 	}
 
-	document.getElementById(node.osm_id).getElementsByClassName('nextChange')[0].innerHTML =  result;
-	document.getElementById(node.osm_id).getElementsByClassName('openingHours')[0].innerHTML =  prettifiedValue;
+	document.getElementById(id).getElementsByClassName('nextChange')[0].innerHTML =  result;
+	document.getElementById(id).getElementsByClassName('openingHours')[0].innerHTML =  prettifiedValue;
 }
 
 

@@ -1,4 +1,5 @@
 var strings_temp =[];
+var s;
 
 const defaultLang='en-EN';
 
@@ -51,6 +52,27 @@ strings_temp['str_copied']=[];
 strings_temp['str_copied']['fr-FR']="Copié dans le presse papier";
 strings_temp['str_copied']['en-EN']="Copied in clipboard";
 
+strings_temp['str_add_node']=[];
+strings_temp['str_add_node']['fr-FR']="Ajouter un lieu";
+strings_temp['str_add_node']['en-EN']="Add a place";
+
+strings_temp['str_share_list']=[];
+strings_temp['str_share_list']['fr-FR']="Partager ma liste";
+strings_temp['str_share_list']['en-EN']="Share my list";
+
+strings_temp['str_osm_no_data']=[];
+strings_temp['str_osm_no_data']['fr-FR']="Non renseigné";
+strings_temp['str_osm_no_data']['en-EN']="No data";
+
+s='str_post_office';
+strings_temp[s]=[];
+strings_temp[s]['fr-FR']="La Poste";
+strings_temp[s]['en-EN']="Post office";
+
+s='str_visit_website';
+strings_temp[s]=[];
+strings_temp[s]['fr-FR']="Site Web";
+strings_temp[s]['en-EN']="Website";
 
 
 const strings = strings_temp;

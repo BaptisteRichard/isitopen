@@ -11,6 +11,7 @@ const urlParams = new URLSearchParams(queryString);
 //default coordinates : fixed to somewhere in Grenoble
 var lat = 45.1877535;
 var lon = 5.7237598;
+var zoom= 7;
 //default app version : 0 if app is not used
 var appVersion = 0; 
 
@@ -21,6 +22,9 @@ if(localStorage.getItem('lat') != null){
 if(localStorage.getItem('lon') != null){
   lon=localStorage.getItem('lon');
 }
+if(localStorage.getItem('zoom') != null){
+  zoom=localStorage.getItem('zoom');
+}
 
 //If some soordinates were passed in URL, use them instead of anything else
 if(urlParams.has('lat')){
@@ -29,8 +33,11 @@ if(urlParams.has('lat')){
 if(urlParams.has('lon')){
   lon=urlParams.get('lon');
 }
+if(urlParams.has('zoom')){
+  zoom=urlParams.get('zoom');
+}
 if(urlParams.has('app')){
-  appVersion=urlParams.get('lon');
+  appVersion=urlParams.get('app');
 }
 
 
@@ -40,7 +47,6 @@ var valid_button = null;
 var markerlist = []
 var center_marker = null
 
-var stage=0; // 0 : loading page / 1: target selected / 2 : position selected -- map drawn 
 
 /**
  * @description
@@ -74,7 +80,7 @@ function initialize() {
 		geolocFail(1);
 	}
 */
-	showMap(lat, lon);
+	showMap(lat, lon,zoom);
 
 }
 
@@ -93,14 +99,16 @@ function clear_all_map() {
 	});
 	valid_button.button.style.display = "none"
 //	map.setView([lat_from, lon_from], 17);
-	map.setZoom(17);
+//	map.setZoom(17);
 }
 
 function goBack(){
-  if(stage == 0 ) { window.location.pathname="/index.html"; return ; }
-//  hide_show('menu') ;
-  clear_all_map();
-  stage --;
+	if(valid_button.button.style.display != "none"){
+		window.location.href="index.html";
+		return false;
+	}
+
+ 	clear_all_map();
 	target_near_pos();
 }
 
@@ -110,7 +118,7 @@ function goBack(){
  *   Affiche la carte, crée et ajoute le bouton "retour" et crééele bouton "validation"
  * @author Pierre Adam
  */
-function showMap(lat,lon) {
+function showMap(lat,lon,zoom) {
 	map = L.map('map').setView([lat,lon], 17);
 	L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
 		// Il est toujours bien de laisser le lien vers la source des données
@@ -118,12 +126,20 @@ function showMap(lat,lon) {
 		minZoom: 1,
 		maxZoom: 20
 	}).addTo(map);
+	map.setZoom(zoom);
 
-	if(appVersion > 0){ //app should not display back button here as it's embedded in title
-		L.easyButton('<img class="back_button" src="images/back.svg" >', (btn, map) => {
-			goBack();
-		}).addTo(map)
-	}
+	back_button = L.easyButton({
+			id: 'back_button',
+			states: [{
+				onClick: function(btn, map) {
+						goBack();
+//					window.location.href="index.html";
+				},
+				icon:'<img class="valid_button" src="images/back.svg" >' 
+				}]
+	}).addTo(map)
+	//back_button.button.style.display = "none"
+
 
 	valid_button = L.easyButton({
 			id: 'valid_button',
@@ -138,7 +154,7 @@ function showMap(lat,lon) {
 				icon:'<img class="valid_button" src="images/check.svg" >' 
 				}]
 	}).addTo(map)
-	valid_button.button.style.display = "none"
+	//valid_button.button.style.display = "none"
 
 }
 
@@ -185,7 +201,6 @@ function hide_show(id) {
  */
 async function target_near_pos() {
 //	hide_show('menu')
-//	stage =1 ; 
 	center_marker = L.marker(map.getCenter()).addTo(map);
 
 	map.on('drag', function (e) {
@@ -204,7 +219,6 @@ async function target_near_pos() {
  */
 async function target_near_me() {
 	hide_show('menu')
-//	stage =2 ; 
 	await showPathToNearestTarget(lat_from,lon_from, DEFAULT_MARGIN)
 }
 
@@ -222,6 +236,7 @@ async function target_near_me() {
 async function showPathToNearestTarget(lat,lon,margin) {
 	localStorage.setItem('lon',lon);
 	localStorage.setItem('lat',lat);
+	localStorage.setItem('zoom',17);
 
   const latMin=parseFloat(lat)-parseFloat(margin);
   const latMax=parseFloat(lat)+parseFloat(margin);
@@ -230,7 +245,7 @@ async function showPathToNearestTarget(lat,lon,margin) {
 
   var position=[lat,lon]
 
-	const overpassUrl = OVERPASS_API + 'node' + '(' + latMin + ',' + lonMin + ',' + latMax + ',' + lonMax + ');out;';
+	const overpassUrl = OVERPASS_API + 'nw' + '(' + latMin + ',' + lonMin + ',' + latMax + ',' + lonMax + ');out;';
 	console.log(overpassUrl);
 	const response = await fetch(overpassUrl);
 	const osmDataAsJson = await response.json(); // read response body and parse as JSON
@@ -249,13 +264,21 @@ async function showPathToNearestTarget(lat,lon,margin) {
 
 	// get the last maxNbOfPark element
 	var results = "";
-			console.log("Node :"+JSON.stringify(osmDataAsJson.elements));
+	console.log("Node :"+JSON.stringify(osmDataAsJson.elements));
 
 	for (node of osmDataAsJson.elements) {
 		console.log("Node :"+JSON.stringify(node));
 
 		if(node.tags && node.tags.name){
-			results += "<a href=\"index.html?addNode="+node.id+"\">"+node.tags.name+"</a><br>";
+		  var id=node.id;
+  		if(node.type == "node" ){ id = "N"+id;}
+  		if(node.type == "way" ){ id = "W"+id;}
+
+			var name=node.tags.name;
+			//for specific amenities, add the type name
+			if(node.tags.amenity && node.tags.amenity == 'post_office' ) { name = i18n('str_post_office')+" "+name ;}
+
+			results += "<a href=\"index.html?addNode="+id+"\">"+name+"</a><br>";
 		}else{
 //			results += "<a href=\"index.html?addNode="+node.id+"\">Node "+node.id"</a><br>";
 		}

@@ -85,9 +85,10 @@ html, body {
   margin-top: 3vh;
 }
 
-.back_button {
-  height: 100%;
-  width: 100%;
+#back_button {
+  height: 40px;
+  width: 40px;
+	background-color:#faa;
 }
 
 button {
