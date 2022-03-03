@@ -57,26 +57,6 @@ function exportList(){
   return false;
 }
 
-function showContextualMenu(id){
-
-	menuShow=1;
-  elem = document.getElementById(id);
-
-  if(elem.getElementsByClassName('menu')[0].style.display == "block"){
-		elem.getElementsByClassName('menu')[0].style.display = "none";
-		elem.getElementsByClassName('openingHours')[0].style.display = "none";
-		elem.getElementsByClassName('nextChange')[0].style.display = "block";
-		elem.getElementsByClassName('address')[0].style.display = "block";
-		elem.getElementsByClassName('name')[0].style.display = "block";
-	}else{
-		elem.getElementsByClassName('menu')[0].style.display = "block";
-		elem.getElementsByClassName('openingHours')[0].style.display = "none";
-		elem.getElementsByClassName('nextChange')[0].style.display = "none";
-		elem.getElementsByClassName('address')[0].style.display = "none";
-		elem.getElementsByClassName('name')[0].style.display = "none";
-	}
-
-}
 
 function isTomorrow(date){
 	var now = new Date();
@@ -90,23 +70,25 @@ function addZero(i) {
 	return i;
 }
 
-function showHideOH(id){
-
+function showMenu(id){
   elem = document.getElementById(id);
+	elem.getElementsByClassName('menu')[0].style.display = "block";
+	elem.getElementsByClassName('home')[0].style.display = "none";
+	elem.getElementsByClassName('openingHours')[0].style.display = "none";
+}
 
-  if(elem.getElementsByClassName('openingHours')[0].style.display == "block"){
-		elem.getElementsByClassName('menu')[0].style.display = "none";
-		elem.getElementsByClassName('openingHours')[0].style.display = "none";
-		elem.getElementsByClassName('nextChange')[0].style.display = "block";
-		elem.getElementsByClassName('address')[0].style.display = "block";
-		elem.getElementsByClassName('name')[0].style.display = "block";
-	}else{
-		elem.getElementsByClassName('menu')[0].style.display = "none";
-		elem.getElementsByClassName('openingHours')[0].style.display = "block";
-		elem.getElementsByClassName('nextChange')[0].style.display = "none";
-		elem.getElementsByClassName('address')[0].style.display = "none";
-		elem.getElementsByClassName('name')[0].style.display = "none";
-	}
+function showOH(id){
+  elem = document.getElementById(id);
+	elem.getElementsByClassName('menu')[0].style.display = "none";
+	elem.getElementsByClassName('home')[0].style.display = "none";
+	elem.getElementsByClassName('openingHours')[0].style.display = "block";
+}
+
+function showHome(id){
+  elem = document.getElementById(id);
+	elem.getElementsByClassName('menu')[0].style.display = "none";
+	elem.getElementsByClassName('home')[0].style.display = "block";
+	elem.getElementsByClassName('openingHours')[0].style.display = "none";
 }
 
 async function fetchObjects(nodeIds){
@@ -167,11 +149,6 @@ function createCanvas(nodeIds){
 		var pressTimer;
 		var div = document.createElement('div');
 		div.id = id;
-		div.onclick = function (){ showHideOH(id)};
-		div.oncontextmenu = function () { showContextualMenu(id); return false; }
-
-		div.ontouchend = function () { if(!menuShow){showHideOH(id)} clearTimeout(pressTimer); menuShow=0; return false; }
-		div.ontouchstart = function () { pressTimer=setTimeout(function(){showContextualMenu(id)},500); return false; }
 
 		div.classList.add("item");
 
@@ -190,28 +167,73 @@ function createCanvas(nodeIds){
 		var openingHours = document.createElement('div');
 		openingHours.classList.add("openingHours");
 		openingHours.innerHTML = "oh (awaiting)";
+ 		openingHours.onclick= function () { 
+			showHome(id); 
+			return false;
+		};
 
 		var menu = document.createElement('div');
 		menu.classList.add("menu");
 
 		var shareBtn = document.createElement('div');
- 		shareBtn.onclick= function () { navigator.clipboard.writeText(window.location.href+"?addNode="+id).then(() => alert(i18n("str_copied"))) ; return false;};
-		shareBtn.innerHTML=i18n('str_share');
+		shareBtn.classList.add("shareBtn");
+ 		shareBtn.onclick= function () { 
+			navigator.clipboard.writeText(window.location.href+"?addNode="+id).then(() => alert(i18n("str_copied"))) ; 
+			showHome(id);
+			return false;
+		};
+		shareBtn.innerHTML='<img src="images/share-2.svg" alt="'+i18n('str_share')+'" />';
 
 		var delBtn = document.createElement('div');
-		delBtn.innerHTML="<a href='index.html?delNode="+id+"' >"+i18n('str_delete')+"</a>";
+		delBtn.classList.add("delBtn");
+		delBtn.innerHTML="<a href='index.html?delNode="+id+"' ><img src='images/trash.svg' alt='"+i18n('str_delete')+"' /></a>";
+
+		var callBtn = document.createElement('div');
+		callBtn.classList.add("callBtn");
+		callBtn.innerHTML="<a href='' ><img src='images/call.svg' alt='"+i18n('str_call')+"' /></a>";
+    callBtn.style.display = "none";
+
+		var websiteBtn = document.createElement('div');
+		websiteBtn.classList.add("websiteBtn");
+		websiteBtn.innerHTML="<a href='' ><img src='images/website.svg' alt='"+i18n('str_website')+"' /></a>";
+    websiteBtn.style.display = "none";
+
+		var ohBtn = document.createElement('div');
+		ohBtn.classList.add("ohBtn");
+ 		ohBtn.onclick= function () { 
+			showOH(id); 
+			return false;
+		};
+		ohBtn.innerHTML='<img src="images/clock.svg" alt="'+i18n('str_show_oh')+'" />';
+    ohBtn.style.display = "none";
 
 		var cancelBtn = document.createElement('div');
-		cancelBtn.innerHTML=i18n("str_cancel");
+		cancelBtn.classList.add("cancelBtn");
+		cancelBtn.innerHTML='<img src="images/cancel.svg" alt="'+i18n('str_cancel')+'" />';
+ 		cancelBtn.onclick= function () { 
+			showHome(id); 
+			return false;
+		};
 
+		menu.appendChild(ohBtn);
+		menu.appendChild(callBtn);
+		menu.appendChild(websiteBtn);
 		menu.appendChild(shareBtn);
 		menu.appendChild(delBtn);
 		menu.appendChild(cancelBtn);
 
 
-		div.appendChild(name);
-		div.appendChild(address);
-		div.appendChild(nextChange);
+		var home = document.createElement('div');
+		home.classList.add("home");
+		home.onclick = function () { 
+			showMenu(id); return false; 
+		}
+
+
+		home.appendChild(name);
+		home.appendChild(address);
+		home.appendChild(nextChange);
+		div.appendChild(home);
 		div.appendChild(openingHours);
 		div.appendChild(menu);
 
@@ -288,20 +310,21 @@ function fillInfo(node){
   //for specific amenities, add the type name
   if(node.type && node.type == 'post_office' ) { name = i18n('str_post_office')+" "+name ;}
 
+	var home=	document.getElementById(id).getElementsByClassName('home')[0];
 
-	document.getElementById(id).getElementsByClassName('name')[0].innerHTML = name;
+	home.getElementsByClassName('name')[0].innerHTML = name;
 
 	//Fetch the possible tags for city and remove undefined ones
 	var location = [node.address.city,node.address.village,node.address.town,node.address.municipality];
 	var city = location.filter(x => x !== undefined);
 	if(node.address.road || city[0]){
-		document.getElementById(id).getElementsByClassName('address')[0].innerHTML = node.address.road+", "+city[0];
+		home.getElementsByClassName('address')[0].innerHTML = node.address.road+", "+city[0];
 	}
   
 	if(!node.extratags.opening_hours) {
 		//If we don't have any data on OSM
 
-		document.getElementById(id).getElementsByClassName('nextChange')[0].innerHTML = i18n('str_osm_no_data');
+		home.getElementsByClassName('nextChange')[0].innerHTML = i18n('str_osm_no_data');
 		document.getElementById(id).getElementsByClassName('openingHours')[0].innerHTML = "";
 		return ;
 	}
@@ -316,10 +339,6 @@ function fillInfo(node){
 	//let prettifiedValue = oh.prettifyValue({conf: { locale: locale, rule_sep_string: '<br/>' },});
 	let prettifiedValue = ohReadable(oh).join("<br/>");
 
-	//Add website information if available
-	if(node.extratags.website) { 
-		prettifiedValue += '<br><a href="'+node.extratags.website+'" target="_blank">'+i18n('str_visit_website')+'</a>'; 
-	}
 
 	var state = oh.getState();
 	var nextChange = oh.getNextChange();
@@ -354,8 +373,33 @@ function fillInfo(node){
 		result += " "+i18n('str_at')+" "+addZero(ncHours)+"h"+addZero(ncMinutes);
 	}
 
-	document.getElementById(id).getElementsByClassName('nextChange')[0].innerHTML =  result;
-	document.getElementById(id).getElementsByClassName('openingHours')[0].innerHTML =  prettifiedValue;
+	home.getElementsByClassName('nextChange')[0].innerHTML =  result;
+
+	if(prettifiedValue){
+		document.getElementById(id).getElementsByClassName('openingHours')[0].innerHTML =  prettifiedValue;
+
+		var button = document.getElementById(id).getElementsByClassName('menu')[0].getElementsByClassName('ohBtn')[0];
+		//var link=button.getElementsByTagName('a')[0];
+		button.style.display = "block";
+	}
+
+	if(node.extratags.website) { 
+		var button = document.getElementById(id).getElementsByClassName('menu')[0].getElementsByClassName('websiteBtn')[0];
+		var link=button.getElementsByTagName('a')[0];
+		//console.log(button);
+		link.href=node.extratags.website; 
+		button.style.display = "block";
+	}
+
+
+	if(node.extratags.phone) { 
+		var button = document.getElementById(id).getElementsByClassName('menu')[0].getElementsByClassName('callBtn')[0];
+		var link=button.getElementsByTagName('a')[0];
+		//console.log(button);
+		link.href="tel:"+node.extratags.phone; 
+		button.style.display = "block";
+	}
+
 }
 
 
