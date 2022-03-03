@@ -51,6 +51,7 @@ var stage=0; // 0 : loading page / 1: target selected / 2 : position selected --
 function initialize() {
 	document.getElementById('map').innerHTML = ""
 
+/*
 	if (navigator.geolocation) {
 		const location_timeout = setTimeout("geolocFail()", 5000);
 		const geoOptions = {
@@ -72,6 +73,9 @@ function initialize() {
 		// Fallback for no geolocation
 		geolocFail(1);
 	}
+*/
+	showMap(lat, lon);
+
 }
 
 
@@ -93,10 +97,11 @@ function clear_all_map() {
 }
 
 function goBack(){
-  if(stage == 0 ) { return; }
-  hide_show('menu') ;
+  if(stage == 0 ) { window.location.pathname="/index.html"; return ; }
+//  hide_show('menu') ;
   clear_all_map();
   stage --;
+	target_near_pos();
 }
 
 /**
@@ -179,8 +184,8 @@ function hide_show(id) {
  * @author Pierre Adam
  */
 async function target_near_pos() {
-	hide_show('menu')
-	stage =2 ; 
+//	hide_show('menu')
+//	stage =1 ; 
 	center_marker = L.marker(map.getCenter()).addTo(map);
 
 	map.on('drag', function (e) {
@@ -199,7 +204,7 @@ async function target_near_pos() {
  */
 async function target_near_me() {
 	hide_show('menu')
-	stage =2 ; 
+//	stage =2 ; 
 	await showPathToNearestTarget(lat_from,lon_from, DEFAULT_MARGIN)
 }
 
