@@ -124,21 +124,23 @@ function init(){
 
 function addLinks(){
 
-	var addLink = document.createElement('a');
-	addLink.href="addNode.html";
-	addLink.innerHTML=i18n('str_add_node');
 
-	var shareLink = document.createElement('a');
+	var addImg = document.getElementById('addImg');
+	addImg.alt=i18n('str_add_node');
+
+	var shareLink = document.getElementById('shareLink'); 
 	shareLink.onclick=function () { exportList(); return false;};
 	shareLink.href="";
-	shareLink.innerHTML=i18n('str_share_list');
-
+	var shareImg = document.getElementById('shareImg');
+	shareImg.alt=i18n('str_share_list');
+/*
 	var separator = document.createElement('span');
 	separator.innerHTML=" | ";
 
 	document.getElementById('links').appendChild(addLink);
 	document.getElementById('links').appendChild(separator);
 	document.getElementById('links').appendChild(shareLink);
+*/
 }
 
 

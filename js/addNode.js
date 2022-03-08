@@ -57,29 +57,6 @@ var center_marker = null
 function initialize() {
 	document.getElementById('map').innerHTML = ""
 
-/*
-	if (navigator.geolocation) {
-		const location_timeout = setTimeout("geolocFail()", 5000);
-		const geoOptions = {
-			enableHighAccuracy: false,
-			maximumAge: 10000,
-			timeout: 5000
-		};
-
-		navigator.geolocation.getCurrentPosition(position => {
-			clearTimeout(location_timeout);
-			lat = position.coords.latitude;
-			lon = position.coords.longitude;
-			showMap(lat, lon);
-		}, function (error) {
-			clearTimeout(location_timeout);
-			geolocFail(2);
-		}, geoOptions);
-	} else {
-		// Fallback for no geolocation
-		geolocFail(1);
-	}
-*/
 	showMap(lat, lon,zoom);
 
 }
@@ -122,7 +99,7 @@ function showMap(lat,lon,zoom) {
 	map = L.map('map').setView([lat,lon], 17);
 	L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
 		// Il est toujours bien de laisser le lien vers la source des données
-		attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a> - icons <a href="/credits.html">credits</a>',
+		attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a> - credits <a href="/credits.html">credits</a>',
 		minZoom: 1,
 		maxZoom: 20
 	}).addTo(map);
@@ -256,9 +233,9 @@ async function showPathToNearestTarget(lat,lon,margin) {
 	// pas de parking à vélo à 200m à la ronde, ben tant pis !
 	if (osmDataAsJson.elements.length == 0) {
 		const popupTitle = 'Nothing found';
-		L.DomUtil.create('p', '', container).innerHTML= 'No such thing under ? ';
+		L.DomUtil.create('p', '', container).innerHTML= 'Nothing found here ';
 		let marker = L.marker([lat,lon]).addTo(map).bindPopup(popup).openPopup();
-		map.setView([lat,lon], 17);
+		map.setView([lat,lon]);
   		return;
 	}
 
@@ -269,7 +246,7 @@ async function showPathToNearestTarget(lat,lon,margin) {
 	for (node of osmDataAsJson.elements) {
 		console.log("Node :"+JSON.stringify(node));
 
-		if(node.tags && node.tags.name){
+		if(node.tags && node.tags.name && ( node.tags.amenity || node.tags.shop ) ){
 		  var id=node.id;
   		if(node.type == "node" ){ id = "N"+id;}
   		if(node.type == "way" ){ id = "W"+id;}
@@ -283,9 +260,12 @@ async function showPathToNearestTarget(lat,lon,margin) {
 //			results += "<a href=\"index.html?addNode="+node.id+"\">Node "+node.id"</a><br>";
 		}
 	}
+	
+	if (results == "") { results = "Nothing found"; }
+
 	L.DomUtil.create('p', '', container).innerHTML= results;
 	let marker = L.marker([lat,lon]).addTo(map).bindPopup(popup).openPopup();
-	map.setView([lat,lon], 17);
+	map.setView([lat,lon]);
  		return;
 
 

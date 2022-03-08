@@ -106,6 +106,14 @@
 	border: 1px solid #A33;
 }
 
+.attribution {
+
+	position : absolute;
+	text-size : 8px;
+	bottom:0;
+	right :0;
+}
+
 </style>
 
   </head>
@@ -113,10 +121,10 @@
 <body>
 
 <center id="links"> 
-<!--
-<a href="addNode.html"> Add a node to check</a> |
-<a href="" onclick="exportList();return false;">Share my list</a>
--->
+
+
+<a href="addNode.html"><img id="addImg" src="images/add.svg"/></a>
+<a href="" id="shareLink"><img id="shareImg" src="images/share-2.svg"/></a>
 </center>
 <div id="content" ></div>
 
@@ -126,6 +134,7 @@ loadParams();
 init();
 </script>
 
+<div class="attribution">CC By-NC-SA, <a href="https://github.com/BaptisteRichard/isitopen">Source code</a>, <a href="credits.html">Credits</a> </div>
 
 
  </body>
