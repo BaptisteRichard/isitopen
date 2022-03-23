@@ -246,7 +246,7 @@ async function showPathToNearestTarget(lat,lon,margin) {
 	for (node of osmDataAsJson.elements) {
 		console.log("Node :"+JSON.stringify(node));
 
-		if(node.tags && node.tags.name && ( node.tags.amenity || node.tags.shop ) ){
+		if(node.tags && node.tags.name && ( node.tags.amenity || node.tags.shop || node.tags.leisure ) ){
 		  var id=node.id;
   		if(node.type == "node" ){ id = "N"+id;}
   		if(node.type == "way" ){ id = "W"+id;}
