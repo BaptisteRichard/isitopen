@@ -17,8 +17,8 @@ strings_temp['weekday_short']['en-EN']=weekday_short_en;
 
 
 strings_temp['str_open_until']=[];
-strings_temp['str_open_until']['fr-FR'] = "Ouvert jusqu'à";
-strings_temp['str_open_until']['én-EN'] = "Open until";
+strings_temp['str_open_until']['fr-FR'] = "Ouvert jusqu'";
+strings_temp['str_open_until']['en-EN'] = "Open until";
 
 strings_temp['str_opens']=[];
 strings_temp['str_opens']['fr-FR']="Ouvre";
@@ -76,12 +76,13 @@ strings_temp[s]['en-EN']="Website";
 
 
 const strings = strings_temp;
-const lang=navigator.language;
+const lang= navigator.language.startsWith('fr') ? 'fr-FR' : navigator.language ;
 
 
 function i18n(str){
 
 	if(strings[str]){
+
 
 		if(strings[str][lang]){
 			return strings[str][lang];
