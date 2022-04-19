@@ -38,6 +38,7 @@ if(urlParams.has('zoom')){
 }
 if(urlParams.has('app')){
   appVersion=urlParams.get('app');
+	localStorage.setItem('app',appVersion);
 }
 
 

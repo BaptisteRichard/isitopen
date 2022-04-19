@@ -6,6 +6,19 @@ var nodeList= [];
 
 var menuShow=0;
 
+var appVersion = "";
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+
+if(localStorage.getItem('app') != null){
+  appVersion=localStorage.getItem('app');
+}
+if(urlParams.has('app')){
+  appVersion=urlParams.get('app');
+  localStorage.setItem('app',appVersion);
+}
+
 
 function loadParams(){
 	const queryString = window.location.search;
@@ -53,7 +66,11 @@ function loadParams(){
 }
 
 function exportList(){
- 	navigator.clipboard.writeText(window.location.href+"?nodeIds="+nodeIds.join()).then(() => alert(i18n("str_copied"))) ;
+	if (appVersion != "" ){
+	 	NativeAndroid.copyToClipboard(window.location.href+"?nodeIds="+nodeIds.join()).then(() => alert(i18n("str_copied"))).catch(() => {alert("something went wrong");}) ;
+	}else{
+	 	navigator.clipboard.writeText(window.location.href+"?nodeIds="+nodeIds.join()).then(() => alert(i18n("str_copied"))).catch(() => {alert("something went wrong");}) ;
+	}
   return false;
 }
 
