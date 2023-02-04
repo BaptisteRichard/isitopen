@@ -77,9 +77,11 @@ function exportList(){
 
 function isTomorrow(date){
 	var now = new Date();
+	now.setHours(00,00,00);
+	date.setHours(00,00,00);
 	var diff = date.getTime() - now.getTime();
 	// date is after now, and less than 2 days forward and not the same day as today
-	return ( diff > 0 && diff < 172799999 && now.getDate() != date.getDate());
+	return ( diff > 0 && diff < 172799000 && now.getDate() != date.getDate());
 }
 
 function addZero(i) {
